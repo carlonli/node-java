@@ -122,7 +122,8 @@ void NewInstanceBaton::ExecuteInternal(JNIEnv* env) {
 
   //printf("invoke: %s\n", javaMethodCallToString(env, m_method, constructor_newInstance, m_args).c_str());
 
-  jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
+  jarray args = javaGetArgsForConstructor(env, m_method, m_args);
+  jobject result = env->CallObjectMethod(m_method, constructor_newInstance, args);
   if(env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
     env->ExceptionClear();
@@ -147,7 +148,8 @@ void StaticMethodCallBaton::ExecuteInternal(JNIEnv* env) {
   }
   */
 
-  jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
+  jarray args = javaGetArgsForMethod(env, m_method, m_args);
+  jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, args);
 
   if(env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
@@ -170,8 +172,9 @@ void InstanceMethodCallBaton::ExecuteInternal(JNIEnv* env) {
     printf("  %s\n", javaObjectToString(env, env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
   }
   */
-
-  jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
+  
+  jarray args = javaGetArgsForMethod(env, m_method, m_args);
+  jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), args);
 
   if(env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
