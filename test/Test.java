@@ -5,6 +5,7 @@ public class Test {
   public static int staticFieldInt = 42;
   public static double staticFieldDouble = 42.5;
   public static Test[] staticArrayObjects = null;
+  public static Object staticFieldObject = null;
 
   public Test() {}
   public Test(Integer i) { this.i = i; }
@@ -42,6 +43,9 @@ public class Test {
   public static int staticMethodAmbiguous(Double a) { return 1; }
   public static int staticMethodAmbiguous(Integer a) { return 2; }
 
+  public static void staticMethodSetObject(Object obj) { staticFieldObject = obj; }
+  public static Object staticMethodGetObject() { return staticFieldObject; }
+  
   public int methodAmbiguous(Double a) { return 1; }
   public int methodAmbiguous(Integer a) { return 2; }
 

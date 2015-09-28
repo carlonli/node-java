@@ -288,5 +288,21 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
       test.ifError(err);
       test.done();
     });
+  },
+  
+  "Call static method with javascript objects": function(test) {
+    var Test = java.import("Test");
+    var obj = Test.staticMethodGetObjectSync();
+    test.equal(obj, null);
+    
+    obj = function() { return 42; };
+    Test.staticMethodSetObjectSync(obj);
+    
+    obj = Test.staticMethodGetObjectSync();
+    test.notEqual(obj, null);
+    console.log('zzzzzzzzzzzzzzzzzzzzzzzz', obj);
+    test.equal(obj(), 42);
+    
+    test.done();
   }
 });

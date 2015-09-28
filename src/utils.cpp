@@ -10,6 +10,7 @@
 
 jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj);
 jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj);
+jobject v8ToJava_v8Object(JNIEnv* env, v8::Local<v8::Object> obj);
 
 void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic) {
   jclass clazzclazz = env->FindClass("java/lang/Class");
@@ -362,12 +363,24 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
     if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
       return v8ToJava_javaLong(env, obj);
     }
+    
+    return v8ToJava_v8Object(env, obj);
   }
 
   // TODO: handle other arg types. Don't print here, see instanceof-test#non-java object
-  // v8::String::AsciiValue typeStr(arg);
+  // v8::String::Utf8Value typeStr(arg);
   // printf("v8ToJava: Unhandled type: %s\n", *typeStr);
   return NULL;
+}
+
+jobject v8ToJava_v8Object(JNIEnv* env, v8::Local<v8::Object> obj) {
+  Nan::Persistent<v8::Object>* p = new Nan::Persistent<v8::Object>();
+  p->Reset(obj);
+
+  jclass nodeObjectClass = env->FindClass("node/NodeObject");
+  jmethodID nodeObject_constructor = env->GetMethodID(nodeObjectClass, "<init>", "(J)V");
+  jobject jobj = env->NewObject(nodeObjectClass, nodeObject_constructor, (long) p);
+  return jobj;
 }
 
 jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj) {
@@ -644,11 +657,18 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
       }
     case TYPE_STRING:
       return Nan::New<v8::String>(javaObjectToString(env, obj).c_str()).ToLocalChecked();
-    case TYPE_OBJECT:
+    case TYPE_OBJECT: {
       if (dynamicProxyData != NULL) {
         return JavaProxyObject::New(java, obj, dynamicProxyData);
       }
+      jclass nodeObjectClass = env->FindClass("node/NodeObject");
+      if (env->IsSameObject(nodeObjectClass, objClazz)) {
+	jmethodID nodeObjectClass_getHandle = env->GetMethodID(nodeObjectClass, "getHandle", "()J");
+	Nan::Persistent<v8::Object>* p = (Nan::Persistent<v8::Object>*) env->CallLongMethod(obj, nodeObjectClass_getHandle);
+	return Nan::New(*p);
+      }
       return JavaObject::New(java, obj);
+    }
     default:
       printf("javaToV8: unhandled type: 0x%03x\n", resultType);
       return JavaObject::New(java, obj);
