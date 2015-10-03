@@ -300,7 +300,6 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     
     obj = Test.staticMethodGetObjectSync();
     test.notEqual(obj, null);
-    console.log('zzzzzzzzzzzzzzzzzzzzzzzz', obj);
     test.equal(obj(), 42);
     
     test.done();
